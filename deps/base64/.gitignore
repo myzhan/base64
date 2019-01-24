@@ -1,0 +1,7 @@
+*.o
+*.a
+bin/base64
+lib/config.h
+lib/table_generator
+test/benchmark
+test/test_base64
