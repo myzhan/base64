@@ -36,6 +36,11 @@ var ErrMissingCodec = errors.New("the chosen codec is missing in the current bui
 // ErrUnknown means something unknown happens, you may report an issue.
 var ErrUnknown = errors.New("unknown error")
 
+// State holds the state of streaming encode or decode.
+type State struct {
+	state C.struct_base64_state
+}
+
 // A Codec is a base64 codec using the standard encoding with padding.
 // It behaves like Go's builtin base64.StdEncoding.
 type Codec struct {
@@ -45,12 +50,12 @@ type Codec struct {
 func isCodecSupported(flag int) bool {
 	testString := "aGVsbG8="
 	srcSize := len(testString)
-	dstBuff := make([]byte, 10)
+	outBuff := make([]byte, 10)
 	var outSize int
 	// Check if given codec is supported by trying to decode a test string.
 	ret := C.base64_decode((*C.char)(unsafe.Pointer(&([]byte(testString)[0]))),
 		C.size_t(srcSize),
-		(*C.char)(unsafe.Pointer(&dstBuff[0])),
+		(*C.char)(unsafe.Pointer(&outBuff[0])),
 		(*C.size_t)(unsafe.Pointer(&outSize)),
 		C.int(flag))
 	return ret != -1
@@ -69,9 +74,30 @@ func NewCodec(flag int) *Codec {
 	}
 }
 
-// EncodedLen returns the length in bytes of the base64 encoding
+// StreamEncodeInit should be called before calling StreamEncode() to init the state.
+func (c *Codec) StreamEncodeInit(state *State) {
+	C.base64_stream_encode_init(&(state.state), C.int(c.flag))
+}
+
+// StreamEncode encodes the block of data at src.
+func (c *Codec) StreamEncode(state *State, src []byte, srcSize int, out []byte, outSize *int) {
+	C.base64_stream_encode(&(state.state),
+		(*C.char)(unsafe.Pointer(&src[0])),
+		(C.size_t)(srcSize),
+		(*C.char)(unsafe.Pointer(&out[0])),
+		(*C.size_t)(unsafe.Pointer(outSize)))
+}
+
+// StreamEncodeFinal finalizes the output begun by previous calls to `StreamEncode()`.
+func (c *Codec) StreamEncodeFinal(state *State, out []byte, outSize *int) {
+	C.base64_stream_encode_final(&(state.state),
+		(*C.char)(unsafe.Pointer(&out[0])),
+		(*C.size_t)(unsafe.Pointer(outSize)))
+}
+
+// encodedLen returns the length in bytes of the base64 encoding
 // of an input buffer of length n.
-func (c *Codec) EncodedLen(n int) int {
+func (c *Codec) encodedLen(n int) int {
 	return (n + 2) / 3 * 4
 }
 
@@ -82,23 +108,37 @@ func (c *Codec) EncodeToString(src []byte) string {
 		return ""
 	}
 
-	dstSize := c.EncodedLen(srcSize)
 	var outSize int
-	dstBuff := make([]byte, dstSize)
+	outBuff := make([]byte, c.encodedLen(srcSize))
 	C.base64_encode((*C.char)(unsafe.Pointer(&src[0])),
 		C.size_t(srcSize),
-		(*C.char)(unsafe.Pointer(&dstBuff[0])),
+		(*C.char)(unsafe.Pointer(&outBuff[0])),
 		(*C.size_t)(unsafe.Pointer(&outSize)),
 		C.int(c.flag))
 
-	return string(dstBuff[:outSize])
+	return string(outBuff[:outSize])
 }
 
-// DecodedLen returns the maximum length in bytes of the decoded data
+// StreamDecodeInit should be called before calling StreamDecode() to init the state.
+func (c *Codec) StreamDecodeInit(state *State) {
+	C.base64_stream_decode_init(&(state.state), C.int(c.flag))
+}
+
+// StreamDecode decodes the block of data at src.
+func (c *Codec) StreamDecode(state *State, src []byte, srcSize int, out []byte, outSize *int) int {
+	ret := C.base64_stream_decode(&(state.state),
+		(*C.char)(unsafe.Pointer(&src[0])),
+		(C.size_t)(srcSize),
+		(*C.char)(unsafe.Pointer(&out[0])),
+		(*C.size_t)(unsafe.Pointer(outSize)))
+	return int(ret)
+}
+
+// decodedLen returns the maximum length in bytes of the decoded data
 // corresponding to n bytes of base64-encoded data.
-func (c *Codec) DecodedLen(n int) int {
+func (c *Codec) decodedLen(n int) int {
 	// Padded base64 should always be a multiple of 4 characters in length.
-	return n / 4 * 3
+	return (n / 4 * 3) + 2
 }
 
 // DecodeString returns the bytes represented by the base64 string s.
@@ -109,18 +149,17 @@ func (c *Codec) DecodeString(src string) ([]byte, error) {
 	}
 
 	var outSize int
-	dstSize := c.DecodedLen(srcSize)
-	dstBuff := make([]byte, dstSize)
+	outBuff := make([]byte, c.decodedLen(srcSize))
 	ret := C.base64_decode(
 		(*C.char)(unsafe.Pointer(&([]byte(src)[0]))),
 		C.size_t(srcSize),
-		(*C.char)(unsafe.Pointer(&dstBuff[0])),
+		(*C.char)(unsafe.Pointer(&outBuff[0])),
 		(*C.size_t)(unsafe.Pointer(&outSize)),
 		C.int(c.flag))
 
 	switch ret {
 	case 1:
-		return dstBuff[:outSize], nil
+		return outBuff[:outSize], nil
 	case 0:
 		return nil, ErrInvalidInput
 	case -1:

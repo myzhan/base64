@@ -3,6 +3,9 @@ package base64
 import (
 	"bytes"
 	"fmt"
+	"io"
+	"io/ioutil"
+	"os"
 	"testing"
 )
 
@@ -54,6 +57,105 @@ var pairs = []testpair{
 	{"easure.", "ZWFzdXJlLg=="},
 	{"asure.", "YXN1cmUu"},
 	{"sure.", "c3VyZS4="},
+}
+
+func TestStreamEncodeInit(t *testing.T) {
+	state := &State{}
+	codec := NewCodec(0)
+	codec.StreamEncodeInit(state)
+}
+
+func TestStreamEncode(t *testing.T) {
+	state := &State{}
+	codec := NewCodec(0)
+	codec.StreamEncodeInit(state)
+
+	file, err := os.Open("moby_dick_plain.txt")
+	defer file.Close()
+	if err != nil {
+		t.Errorf("%v\n", err)
+		return
+	}
+
+	var encodedBytes []byte
+	expectedEncodeBytes, err := ioutil.ReadFile("moby_dick_base64.txt")
+	if err != nil {
+		t.Errorf("%v\n", err)
+		return
+	}
+
+	maxChunkSize := 10
+	encodedChunkSize := codec.encodedLen(maxChunkSize)
+
+	var outSize int
+	readBuff := make([]byte, maxChunkSize)
+	outBuff := make([]byte, encodedChunkSize)
+
+	for {
+		nread, err := file.Read(readBuff)
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				t.Errorf("%v\n", err)
+				return
+			}
+		}
+		codec.StreamEncode(state, readBuff, nread, outBuff, &outSize)
+		encodedBytes = append(encodedBytes, outBuff[:outSize]...)
+	}
+	codec.StreamEncodeFinal(state, outBuff, &outSize)
+	if outSize > 0 {
+		// write trailer if any
+		encodedBytes = append(encodedBytes, outBuff[:outSize]...)
+	}
+	if !bytes.Equal(expectedEncodeBytes, encodedBytes) {
+		t.Error("not equal")
+	}
+}
+
+func TestStreamDecode(t *testing.T) {
+	state := &State{}
+	codec := NewCodec(0)
+	codec.StreamDecodeInit(state)
+
+	file, err := os.Open("moby_dick_base64.txt")
+	defer file.Close()
+	if err != nil {
+		t.Errorf("%v\n", err)
+		return
+	}
+
+	var decodedBytes []byte
+	expectedDecodeBytes, err := ioutil.ReadFile("moby_dick_plain.txt")
+	if err != nil {
+		t.Errorf("%v\n", err)
+		return
+	}
+
+	maxChunkSize := 10
+	decodedChunkSize := codec.decodedLen(maxChunkSize)
+
+	var outSize int
+	readBuff := make([]byte, maxChunkSize)
+	outBuff := make([]byte, decodedChunkSize)
+
+	for {
+		nread, err := file.Read(readBuff)
+		if err != nil {
+			if err == io.EOF {
+				break
+			} else {
+				t.Errorf("%v\n", err)
+				return
+			}
+		}
+		codec.StreamDecode(state, readBuff, nread, outBuff, &outSize)
+		decodedBytes = append(decodedBytes, outBuff[:outSize]...)
+	}
+	if !bytes.Equal(expectedDecodeBytes, decodedBytes) {
+		t.Error("not equal")
+	}
 }
 
 func TestEncodeToString(t *testing.T) {
