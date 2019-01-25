@@ -125,13 +125,22 @@ func (c *Codec) StreamDecodeInit(state *State) {
 }
 
 // StreamDecode decodes the block of data at src.
-func (c *Codec) StreamDecode(state *State, src []byte, srcSize int, out []byte, outSize *int) int {
+func (c *Codec) StreamDecode(state *State, src []byte, srcSize int, out []byte, outSize *int) (err error) {
 	ret := C.base64_stream_decode(&(state.state),
 		(*C.char)(unsafe.Pointer(&src[0])),
 		(C.size_t)(srcSize),
 		(*C.char)(unsafe.Pointer(&out[0])),
 		(*C.size_t)(unsafe.Pointer(outSize)))
-	return int(ret)
+	switch ret {
+	case 1:
+		return nil
+	case 0:
+		return ErrInvalidInput
+	case -1:
+		return ErrMissingCodec
+	default:
+		return ErrUnknown
+	}
 }
 
 // decodedLen returns the maximum length in bytes of the decoded data

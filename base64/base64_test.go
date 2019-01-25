@@ -150,7 +150,11 @@ func TestStreamDecode(t *testing.T) {
 				return
 			}
 		}
-		codec.StreamDecode(state, readBuff, nread, outBuff, &outSize)
+		err = codec.StreamDecode(state, readBuff, nread, outBuff, &outSize)
+		if err != nil {
+			t.Errorf("%v\n", err)
+			return
+		}
 		decodedBytes = append(decodedBytes, outBuff[:outSize]...)
 	}
 	if !bytes.Equal(expectedDecodeBytes, decodedBytes) {
