@@ -13,3 +13,7 @@ The Makefile of the C library is modified slightly to generate a libbase64.a fil
 ```bash
 cd deps/base64 && make
 ```
+
+## Known Issues
+
+- Whitespace is not skipped, decoding strings like "c3VyZQ==\r" will fail.

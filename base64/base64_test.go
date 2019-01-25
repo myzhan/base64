@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"os"
 	"testing"
 )
@@ -178,6 +179,36 @@ func TestDecodeString(t *testing.T) {
 		}
 		if !bytes.Equal(got, []byte(pair.decoded)) {
 			t.Errorf("Decode(%q) = %q, want %q", pair.encoded, got, pair.decoded)
+		}
+	}
+}
+
+func IgnoredTestNewLineCharacters(t *testing.T) {
+	// Each of these should decode to the string "sure", without errors.
+	const expected = "sure"
+	examples := []string{
+		"c3VyZQ==",
+		"c3VyZQ==\r",
+		"c3VyZQ==\n",
+		"c3VyZQ==\r\n",
+		"c3VyZ\r\nQ==",
+		"c3V\ryZ\nQ==",
+		"c3V\nyZ\rQ==",
+		"c3VyZ\nQ==",
+		"c3VyZQ\n==",
+		"c3VyZQ=\n=",
+		"c3VyZQ=\r\n\r\n=",
+	}
+	codec := NewCodec(Base64ForceAVX)
+	for _, e := range examples {
+		log.Println("decoding:", e)
+		buf, err := codec.DecodeString(e)
+		if err != nil {
+			t.Errorf("Decode(%q) failed: %v", e, err)
+			continue
+		}
+		if s := string(buf); s != expected {
+			t.Errorf("Decode(%q) = %q, want %q", e, s, expected)
 		}
 	}
 }
