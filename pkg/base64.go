@@ -1,8 +1,8 @@
 package base64
 
 /*
-#cgo CFLAGS: -I../deps/base64/include
-#cgo LDFLAGS: -L../deps/base64/lib -lbase64
+#cgo CFLAGS: -I../c-deps/base64/include
+#cgo LDFLAGS: -L../c-deps/base64/lib -lbase64
 
 #include <stddef.h>
 #include "libbase64.h"
