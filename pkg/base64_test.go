@@ -70,7 +70,7 @@ func TestStreamEncode(t *testing.T) {
 	codec := NewCodec(0)
 	codec.StreamEncodeInit(state)
 
-	file, err := os.Open("moby_dick_plain.txt")
+	file, err := os.Open("testdata/moby_dick_plain.txt")
 	defer file.Close()
 	if err != nil {
 		t.Errorf("%v\n", err)
@@ -78,7 +78,7 @@ func TestStreamEncode(t *testing.T) {
 	}
 
 	var encodedBytes []byte
-	expectedEncodeBytes, err := ioutil.ReadFile("moby_dick_base64.txt")
+	expectedEncodeBytes, err := ioutil.ReadFile("testdata/moby_dick_base64.txt")
 	if err != nil {
 		t.Errorf("%v\n", err)
 		return
@@ -119,7 +119,7 @@ func TestStreamDecode(t *testing.T) {
 	codec := NewCodec(0)
 	codec.StreamDecodeInit(state)
 
-	file, err := os.Open("moby_dick_base64.txt")
+	file, err := os.Open("testdata/moby_dick_base64.txt")
 	defer file.Close()
 	if err != nil {
 		t.Errorf("%v\n", err)
@@ -127,7 +127,7 @@ func TestStreamDecode(t *testing.T) {
 	}
 
 	var decodedBytes []byte
-	expectedDecodeBytes, err := ioutil.ReadFile("moby_dick_plain.txt")
+	expectedDecodeBytes, err := ioutil.ReadFile("testdata/moby_dick_plain.txt")
 	if err != nil {
 		t.Errorf("%v\n", err)
 		return
