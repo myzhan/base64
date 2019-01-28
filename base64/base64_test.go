@@ -23,7 +23,7 @@ func TestFlags(t *testing.T) {
 	testEqual(t, "Base64ForceNeon32 = %q, want %q", Base64ForceNeon32, 1<<1)
 	testEqual(t, "Base64ForceNeon64 = %q, want %q", Base64ForceNeon64, 1<<2)
 	testEqual(t, "Base64ForcePlain = %q, want %q", Base64ForcePlain, 1<<3)
-	testEqual(t, "Base64ForceSSE3 = %q, want %q", Base64ForceSSE3, 1<<4)
+	testEqual(t, "Base64ForceSSSE3 = %q, want %q", Base64ForceSSSE3, 1<<4)
 	testEqual(t, "Base64ForceSSE41 = %q, want %q", Base64ForceSSE41, 1<<5)
 	testEqual(t, "Base64ForceSSE42 = %q, want %q", Base64ForceSSE42, 1<<6)
 	testEqual(t, "Base64ForceAVX = %q, want %q", Base64ForceAVX, 1<<7)
@@ -220,7 +220,7 @@ func BenchmarkEncodeToString(b *testing.B) {
 		// "neon32": NewCodec(Base64ForceNeon32),
 		// "neon64": NewCodec(Base64ForceNeon64),
 		"plain": NewCodec(Base64ForcePlain),
-		"sse3":  NewCodec(Base64ForceSSE3),
+		"ssse3": NewCodec(Base64ForceSSSE3),
 		"sse41": NewCodec(Base64ForceSSE41),
 		"sse42": NewCodec(Base64ForceSSE42),
 		"avx":   NewCodec(Base64ForceAVX),
@@ -249,7 +249,7 @@ func BenchmarkDecodeString(b *testing.B) {
 		// "neon32": NewCodec(Base64ForceNeon32),
 		// "neon64": NewCodec(Base64ForceNeon64),
 		"plain": NewCodec(Base64ForcePlain),
-		"sse3":  NewCodec(Base64ForceSSE3),
+		"ssse3": NewCodec(Base64ForceSSSE3),
 		"sse41": NewCodec(Base64ForceSSE41),
 		"sse42": NewCodec(Base64ForceSSE42),
 		"avx":   NewCodec(Base64ForceAVX),

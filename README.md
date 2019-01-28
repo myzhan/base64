@@ -14,6 +14,12 @@ The Makefile of the C library is modified slightly to generate a libbase64.a fil
 cd deps/base64 && make
 ```
 
+To build all supported codecs on x86.
+
+```
+AVX2_CFLAGS=-mavx2 SSSE3_CFLAGS=-mssse3 SSE41_CFLAGS=-msse4.1 SSE42_CFLAGS=-msse4.2 AVX_CFLAGS=-mavx cd deps/base64 && make
+```
+
 ## Known Issues
 
 - Whitespace is not skipped, decoding strings like "c3VyZQ==\r" will fail.

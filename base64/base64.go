@@ -22,7 +22,7 @@ const (
 	Base64ForceNeon32
 	Base64ForceNeon64
 	Base64ForcePlain
-	Base64ForceSSE3
+	Base64ForceSSSE3
 	Base64ForceSSE41
 	Base64ForceSSE42
 	Base64ForceAVX
@@ -43,7 +43,7 @@ type State struct {
 }
 
 // A Codec is a base64 codec using the standard encoding with padding.
-// It behaves like Go's builtin base64.StdEncoding.
+// It behaves like Go's builtin base64.StdEncoding, but it doesn't skip whitespaces so far.
 type Codec struct {
 	flag int
 }
@@ -62,7 +62,7 @@ func isCodecSupported(flag int) bool {
 	return ret != -1
 }
 
-// DefaultCodec will choose the underlying codec at runtime.
+// DefaultCodec will choose the underlying codec at runtime on x86.
 var DefaultCodec = NewCodec(0)
 
 // NewCodec creates a codec by specifying the flag.
@@ -89,7 +89,7 @@ func (c *Codec) StreamEncode(state *State, src []byte, srcSize int, out []byte, 
 		(*C.size_t)(unsafe.Pointer(outSize)))
 }
 
-// StreamEncodeFinal finalizes the output begun by previous calls to `StreamEncode()`.
+// StreamEncodeFinal finalizes the output begun by previous calls to StreamEncode().
 func (c *Codec) StreamEncodeFinal(state *State, out []byte, outSize *int) {
 	C.base64_stream_encode_final(&(state.state),
 		(*C.char)(unsafe.Pointer(&out[0])),
@@ -148,6 +148,7 @@ func (c *Codec) StreamDecode(state *State, src []byte, srcSize int, out []byte, 
 // corresponding to n bytes of base64-encoded data.
 func (c *Codec) decodedLen(n int) int {
 	// Padded base64 should always be a multiple of 4 characters in length.
+	// It's slightly enlarged to work with streaming decode.
 	return (n / 4 * 3) + 2
 }
 
