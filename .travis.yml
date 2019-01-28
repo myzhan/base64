@@ -8,10 +8,10 @@ go:
   - tip
 
 install:
-  - cd deps/base64 && make
+  - cd c-deps/base64 && make
 
 script:
-  - cd $TRAVIS_BUILD_DIR/base64 && go test -timeout 1m -coverprofile=coverage.txt -covermode=atomic
+  - cd $TRAVIS_BUILD_DIR/pkg && go test -timeout 1m -coverprofile=coverage.txt -covermode=atomic
 
 after_success:
   - bash <(curl -s https://codecov.io/bash)
