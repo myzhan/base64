@@ -85,7 +85,7 @@ func TestStreamEncode(t *testing.T) {
 	}
 
 	maxChunkSize := 10
-	encodedChunkSize := codec.encodedLen(maxChunkSize)
+	encodedChunkSize := codec.EncodedLen(maxChunkSize)
 
 	var outSize int
 	readBuff := make([]byte, maxChunkSize)
@@ -134,7 +134,7 @@ func TestStreamDecode(t *testing.T) {
 	}
 
 	maxChunkSize := 10
-	decodedChunkSize := codec.decodedLen(maxChunkSize)
+	decodedChunkSize := codec.DecodedLen(maxChunkSize)
 
 	var outSize int
 	readBuff := make([]byte, maxChunkSize)

@@ -96,9 +96,9 @@ func (c *Codec) StreamEncodeFinal(state *State, out []byte, outSize *int) {
 		(*C.size_t)(unsafe.Pointer(outSize)))
 }
 
-// encodedLen returns the length in bytes of the base64 encoding
+// EncodedLen returns the length in bytes of the base64 encoding
 // of an input buffer of length n.
-func (c *Codec) encodedLen(n int) int {
+func (c *Codec) EncodedLen(n int) int {
 	return (n + 2) / 3 * 4
 }
 
@@ -110,7 +110,7 @@ func (c *Codec) EncodeToString(src []byte) string {
 	}
 
 	var outSize int
-	outBuff := make([]byte, c.encodedLen(srcSize))
+	outBuff := make([]byte, c.EncodedLen(srcSize))
 	C.base64_encode((*C.char)(unsafe.Pointer(&src[0])),
 		C.size_t(srcSize),
 		(*C.char)(unsafe.Pointer(&outBuff[0])),
@@ -144,9 +144,9 @@ func (c *Codec) StreamDecode(state *State, src []byte, srcSize int, out []byte, 
 	}
 }
 
-// decodedLen returns the maximum length in bytes of the decoded data
+// DecodedLen returns the maximum length in bytes of the decoded data
 // corresponding to n bytes of base64-encoded data.
-func (c *Codec) decodedLen(n int) int {
+func (c *Codec) DecodedLen(n int) int {
 	// Padded base64 should always be a multiple of 4 characters in length.
 	// It's slightly enlarged to work with streaming decode.
 	return (n / 4 * 3) + 2
@@ -160,7 +160,7 @@ func (c *Codec) DecodeString(src string) ([]byte, error) {
 	}
 
 	var outSize int
-	outBuff := make([]byte, c.decodedLen(srcSize))
+	outBuff := make([]byte, c.DecodedLen(srcSize))
 	ret := C.base64_decode(
 		(*C.char)(unsafe.Pointer(&([]byte(src)[0]))),
 		C.size_t(srcSize),
