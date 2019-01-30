@@ -23,3 +23,4 @@ AVX2_CFLAGS=-mavx2 SSSE3_CFLAGS=-mssse3 SSE41_CFLAGS=-msse4.1 SSE42_CFLAGS=-msse
 ## Known Issues
 
 - Whitespace is not skipped, decoding strings like "c3VyZQ==\r" will fail.
+- URLEncoding is not supported.
